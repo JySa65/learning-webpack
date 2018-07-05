@@ -7,9 +7,6 @@ $ git clone https://github.com/JySa65/learning-webpack.git
 $ cd learning-webpack/
 # instalar dependencias
 $ npm install
-2
-# compilar javascript y sass and image
-$ gulp
 
 # Execute in development
 $ npm start 
