@@ -1,13 +1,16 @@
 const webpack = require('webpack');
+const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const DEBUG = process.env.NODE_ENV !== 'production';
-const { ImageminWebpackPlugin } = require("imagemin-webpack");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ImageminPlugin = require('imagemin-webpack-plugin').default;
 
 const CleanWebpack = new CleanWebpackPlugin(['static/css/', 'static/js/', 
 	'static/sourcemaps/', 'static/fonts/', 'static/img/']);
+
 /* Dev */
 const ExtractText = new ExtractTextPlugin(
 {
@@ -18,6 +21,35 @@ const ExtractText = new ExtractTextPlugin(
 /*end dev */
 
 /*Production*/
+const ImgPlugin = new ImageminPlugin({
+	test: /\.(gif|png|jpe?g|svg|jpg)$/i,
+	mozjpeg: {
+		progressive: true,
+		quality: 65
+	},
+	optipng: {
+		enabled: true,
+		optimizationLevel: 9
+	},
+	pngquant: {
+		quality: '65-90',
+		speed: 4
+	},
+	gifsicle: {
+		interlaced: false,
+	},
+	webp: {
+		quality: 75
+	},
+});
+
+const CopyWebpack = new CopyWebpackPlugin([
+{
+	from: path.resolve(__dirname, 'src/img/'),
+	to: path.resolve(__dirname, 'img/'),
+},
+]);
+
 
 const WebpackDefine = new webpack.DefinePlugin({
 	'process.env': {
@@ -42,20 +74,7 @@ const OptimizeCss = new OptimizeCssAssetsPlugin({
 	},
 	canPrint: true,
 });
-
-
 /*end production*/ 
-const imageminManifest = {};
-const ImagenMin = new ImageminWebpackPlugin({
-	cache: true,
-	bail: false, 
-	loader: false,
-	manifest: imageminManifest,
-	name: "./static/img/[name].[ext]",
-	test: /\.(jpe?g|png|gif|svg)$/i,
-	include: undefined,
-	exclude: undefined
-})
 
 
 const config = {
@@ -101,60 +120,29 @@ const config = {
 					outputPath: 'fonts/'
 				}
 			}]
-		},
-		{
-			test: /\.(gif|png|jpe?g|svg|jpg)$/i,
-			use: 
-			[
-			{
-				loader: 'file-loader',
-				options: 
-				{
-					mozjpeg: {
-						progressive: true,
-						quality: 65
-					},
-					optipng: {
-						enabled: false,
-					},
-					pngquant: {
-						quality: '65-90',
-						speed: 4
-					},
-					gifsicle: {
-						interlaced: false,
-					},
-					webp: {
-						quality: 75
-					},
-					/*emitFile: true, */
-					name:'img/[hash].[ext]',
-					publicPath: '../'
-				},
-			},
-			],
 		}
 		]
 	},
 	devtool: DEBUG ? 'source-map' : '',
 	context: __dirname,
-	target: 'web',
+	// target: 'web',
 	plugins:
 	DEBUG ? 
 	[
-	// CleanWebpack,
 	ExtractText,
-	ImagenMin
+	CopyWebpack,
+	
 	]:
-	[
-	CleanWebpack,
-	ImagenMin,
+	[CleanWebpack,
 	WebpackDefine,
 	WebpackOptimezeOccurence,
 	WebpackOptimezeUglifyJs,
 	ExtractTextCss,
-	OptimizeCss
-	],
+	OptimizeCss,
+	CopyWebpack,
+	ImgPlugin
+	],	
+	
 	cache: true,
 };
 
